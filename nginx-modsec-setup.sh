@@ -127,6 +127,8 @@ if [ ! -d /usr/src/modsecurity/modsecurity-v$MODSEC_VERSION ]; then
 	sudo make install 1> /dev/null
 	sudo chown -R `whoami` /opt/modsecurity-$MODSEC_VERSION
 	cd ../
+else 
+	echo "ModSecurity already installed";
 fi
 
 # ModSecurity-nginx
@@ -200,6 +202,7 @@ if [ ! -d /etc/nginx ]; then
 	cd /usr/src/modsecurity
 else
 	echo "nginx already installed you must remove it first";
+	exit 1;
 fi
 
 if [ ! -d /etc/nginx/modsecurity ]; then
@@ -215,7 +218,7 @@ if [ ! -d /etc/nginx/modsecurity ]; then
 	sudo /sbin/restorecon -R /etc/nginx/modsecurity
 fi
 
-whatNext
+info
 
 
 

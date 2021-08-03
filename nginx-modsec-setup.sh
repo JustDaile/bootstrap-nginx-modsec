@@ -116,11 +116,11 @@ cd /usr/src/modsecurity
 # Download the specified version of SpiderLabs ModSecurity
 if [ ! -d /usr/src/modsecurity/modsecurity-v$MODSEC_VERSION ]; then
 	echo "Downloading ModSecurity $MODSEC_VERSION";
-	wget https://github.com/SpiderLabs/ModSecurity/releases/download/v$MODSEC_VERSION/modsecurity-v$MODSEC_VERSION.tar.gz 1> /dev/null
+	wget --quiet https://github.com/SpiderLabs/ModSecurity/releases/download/v$MODSEC_VERSION/modsecurity-v$MODSEC_VERSION.tar.gz
 	tar zxvf modsecurity-v$MODSEC_VERSION.tar.gz
 	sudo rm modsecurity-v$MODSEC_VERSION.tar.gz
 
-	echo "Compiling and installing ModSecurity";
+	echo "Compiling and installing ModSecurity (grab a drink this may take a while)";
 	cd modsecurity-v$MODSEC_VERSION
 	./configure --prefix=/opt/modsecurity-$MODSEC_VERSION --enable-mutex-on-pm 1> /dev/null
 	sudo make 1> /dev/null
@@ -134,7 +134,7 @@ fi
 # ModSecurity-nginx
 if [ ! -d /usr/src/modsecurity/modsecurity-nginx-v$MODSEC_NGINX_VERSION ]; then
 	echo "Downloading ModSecurity-nginx connector";
-	wget https://github.com/SpiderLabs/ModSecurity-nginx/releases/download/v$MODSEC_NGINX_VERSION/modsecurity-nginx-v$MODSEC_NGINX_VERSION.tar.gz 1> /dev/null
+	wget --quiet https://github.com/SpiderLabs/ModSecurity-nginx/releases/download/v$MODSEC_NGINX_VERSION/modsecurity-nginx-v$MODSEC_NGINX_VERSION.tar.gz 1> /dev/null
 	tar -xvzf modsecurity-nginx-v$MODSEC_NGINX_VERSION.tar.gz
 	sudo rm modsecurity-nginx-v$MODSEC_NGINX_VERSION.tar.gz
 else
@@ -147,49 +147,38 @@ if [ ! -d /etc/nginx ]; then
 	export PATH=$PATH
 	export MODSECURITY=/usr/src/modsecurity/modsecurity-v$MODSEC_VERSION
 	export MODSECURITY_NGINX=/usr/src/modsecurity/modsecurity-nginx-v$MODSEC_NGINX_VERSION
-
 	echo "Setting up nginx user";
 	sudo adduser --system --no-create-home --user-group -s /sbin/nologin nginx 1> /dev/null
-
 	echo "Downloading nginx";
-	wget http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz 1> /dev/null
+	wget --quiet http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz 1> /dev/null
 	tar zxvf nginx-$NGINX_VERSION.tar.gz
 	sudo rm nginx-$NGINX_VERSION.tar.gz
 	cd nginx-$NGINX_VERSION
 	export MODSECURITY_LIB="$MODSECURITY/src/.libs/"
 	export MODSECURITY_INC="$MODSECURITY/headers/"
-
-	echo "Compiling nginx";
-	# 
-	# You can add or remove flags here.
-	# Run /usr/src/modsecurity/nginx-$VERSION/configure --help to see a list of available flags.
-	# 
+	echo "Compiling nginx (won't take as much time as ModSecurity)";
 	./configure --prefix=/etc/nginx --user=nginx --group=nginx --build=bootstrap-nginx-modsec-v$VERSION --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-threads --with-pcre --with-http_ssl_module --with-file-aio --with-stream --with-compat --add-dynamic-module=$MODSECURITY_NGINX 1> /dev/null
 	echo "Making nginx modules";
 	sudo make 1> /dev/null
 	sudo make install 1> /dev/null
 	sudo make modules 1> /dev/null
-
 	# Create /etc/nginx/modules.
 	if [ ! -d /etc/nginx/modules ]; then
 		sudo mkdir /etc/nginx/modules
 	fi
 	sudo cp objs/*.so /etc/nginx/modules
-
 	# Create symbolic link from /etc/nginx/sbin/nginx to /usr/local/bin.
 	if [ -d /etc/nginx/sbin ] && [ ! -f /usr/local/bin/nginx ]; then
 		sudo ln -s /etc/nginx/sbin/nginx /usr/local/bin/nginx
 	else 
 		echo "check for compiled binary: /etc/nginx/sbin, unable to link to /usr/local/bin/nginx as it may already exist";
 	fi
-
 	# Create /var/log/nginx if it doesn't get created during install.
 	if [ ! -d /var/log/nginx ]; then
 		sudo mkdir /var/log/nginx
 		sudo touch /var/log/nginx/access.log
 		sudo touch /var/log/nginx/error.log
 	fi
-
 	cd /etc/nginx
 	# Create basic project layout.
 	sudo mkdir /etc/nginx/conf.d
@@ -207,7 +196,7 @@ fi
 
 if [ ! -d /etc/nginx/modsecurity ]; then
 	echo "Installing OWASP CRS";
-	wget https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/refs/tags/v$MODSEC_CRS_VERSION.tar.gz 1> /dev/null
+	wget --quiet https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/refs/tags/v$MODSEC_CRS_VERSION.tar.gz 1> /dev/null
 	tar zxvf v$MODSEC_CRS_VERSION.tar.gz
 	rm v$MODSEC_CRS_VERSION.tar.gz
 	sudo mv owasp-modsecurity-crs-$MODSEC_CRS_VERSION /etc/nginx
